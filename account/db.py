@@ -25,6 +25,17 @@ class SQLiteDB:
 
     # ------------------------------------------------------------------------------------------
 
+    def __enter__(self):
+        self._create_connection()
+        return self
+
+    # ------------------------------------------------------------------------------------------
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close_connection()
+
+    # ------------------------------------------------------------------------------------------
+
     @property
     def conn(self) -> Any:
         """
@@ -143,6 +154,40 @@ class SQLiteDB:
 # ==========================================================================================
 
 
+def create_position_table(position: str, database: str) -> None:
+    query = f"""CREATE TABLE {position} (
+        Date VARCHAR(10) NOT NULL,
+        Credit REAL DEFAULT 0.0,
+        Close REAL NOT NULL,
+        PRIMARY KEY (Date)
+    );
+    """
+    with SQLiteDB(database) as db:
+        db.execute_query(query)
+
+
+# -------------------------------------------------------------------------------------------
+
+
+def create_fund_table(database: str) -> None:
+    query = """CREATE TABLE Funds (
+    Fund VARCHAR(8) NOT NULL,
+    Status VARCHAR(8) CHECK (Status IN ('Active', 'Inactive')),
+    PRIMARY KEY (Fund)
+);
+"""
+    with SQLiteDB(database) as db:
+        db.execute_query(query)
+
+
+# ------------------------------------------------------------------------------------------
+
+
+def create_database(database: str) -> None:
+    create_fund_table(database)
+
+
+# ------------------------------------------------------------------------------------------
 # def create_position_table(file_name: str, account: str) -> pd.DataFrame:
 #     db = SQLiteDB(file_name)
 #     query = f"SELECT * FROM {account};"

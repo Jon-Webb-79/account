@@ -1,5 +1,7 @@
 # Import necessary packages here
 
+from account.db import create_database, create_position_table
+
 # ==========================================================================================
 # ==========================================================================================
 # File:    test.py
@@ -28,9 +30,10 @@
 # Insert Code here
 
 
-def test_give_name_here():
-    # Add test here
-    pass
+def test_create_db():
+    db_name = "test.db"
+    create_database(db_name)
+    create_position_table("VOO", db_name)
 
 
 # ==========================================================================================
