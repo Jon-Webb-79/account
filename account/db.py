@@ -188,30 +188,32 @@ def create_database(database: str) -> None:
 
 
 # ------------------------------------------------------------------------------------------
-# def create_position_table(file_name: str, account: str) -> pd.DataFrame:
-#     db = SQLiteDB(file_name)
-#     query = f"SELECT * FROM {account};"
-#     df = db.execute_query(query)
-#     df["Date"] = pd.to_datetime(df["Date"], format="%m-%d-%Y")
-#     # Create Cum Credit
-#     df["CumCredit"] = df["Credit"].cumsum()
-#     # Create daily delta value
-#     df["DollarDelta"] = df["Closeout"] - (df["Closeout"].shift(1) + df["Credit"])
-#     # Create %Delta per day
-#     df["PercDelta"] = df["DollarDelta"] / df["Closeout"] * 100.0
-#     # Create Cummulative % columm
-#     df["Percentage"] = ((df["Closeout"] / df["CumCredit"]) - 1.0) * 100.0
-#     return df
-#
-#
-# ==========================================================================================
-# ==========================================================================================
-#
-#
-# def create_funds_table(file_name: str) -> pd.DataFrame:
-#     db = SQLiteDB(file_name)
-#     query = "SELECT * FROM Funds;"
-#     return db.execute_query(query)
+
+
+def create_position_df(db_name: str, account: str) -> pd.DataFrame:
+    query = f"SELECT * FROM {account};"
+    with SQLiteDB(db_name) as db:
+        df = db.execute_query(query)
+
+    df["Date"] = pd.to_datetime(df["Date"], format="%m-%d-%Y")
+    # Create Cum Credit
+    df["CumCredit"] = df["Credit"].cumsum()
+    # Create daily delta value
+    df["DollarDelta"] = df["Closeout"] - (df["Closeout"].shift(1) + df["Credit"])
+    # Create %Delta per day
+    df["PercDelta"] = df["DollarDelta"] / df["Closeout"] * 100.0
+    # Create Cummulative % columm
+    df["Percentage"] = ((df["Closeout"] / df["CumCredit"]) - 1.0) * 100.0
+    return df
+
+
+# ------------------------------------------------------------------------------------------
+
+
+def create_funds_df(db_name: str) -> pd.DataFrame:
+    query = "SELECT * FROM Funds;"
+    with SQLiteDB(db_name) as db:
+        return db.execute_query(query)
 
 
 # ==========================================================================================
