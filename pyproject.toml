@@ -1,0 +1,104 @@
+[tool.poetry]
+name = "account"
+version = "0.1.0"
+description = ""
+authors = ["Jon Webb <webbja123@gmail.com>"]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+flake8 = "^7.0.0"
+mypy = "^1.9.0"
+black = "^24.3.0"
+isort = "^5.13.2"
+flake8-bandit = "^4.1.1"
+flake8-bugbear = "^24.2.6"
+flake8-builtins = "^2.4.0"
+flake8-comprehensions = "^3.14.0"
+flake8-implicit-str-concat = "^0.4.0"
+flake8-print = "^5.0.0"
+tox = "^4.14.2"
+pytest-cov = "^5.0.0"
+pyupgrade = "^3.15.2"
+pre-commit = "^3.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+	"Operating System :: POSIX :: Linux",
+]
+
+[tool.isort]
+profile = 'black'
+
+[tool.black]
+line-length = 90
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+  | profiling
+)/
+'''
+
+[tool.tox]
+legacy_tox_ini = """
+	[tox]
+    env_list = py310, mypy, lint
+
+    [testenv]
+	description = run tests with pytest
+    deps = pytest
+    commands = pytest tests -v {posargs}
+
+	[testeng:mypy]
+	deps = mypy
+	commands = mypy account
+
+	[testenv:lint]
+	deps = pre-commit
+	commands = pre-commit run --all-files --show-diff-on-failure
+
+	[gh-actions]
+	python =
+		3.11: py311, mypy, lint
+"""
+
+[tool.mypy]
+exclude = ["docs", "tests"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+console_output_style = "progress"
+
+[project.urls]
+"Homepage" = "https://github.com/Jon-Webb-79/account"
