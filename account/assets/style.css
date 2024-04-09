@@ -1,0 +1,53 @@
+/* style.css */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Make sure the html and body elements fill the screen */
+}
+
+#container {
+    display: flex; /* Establishes a flex container */
+    flex-direction: row; /* Aligns children (the columns) horizontally */
+    height: 95vh; /* Sets the container's height to fill the viewport */
+    box-sizing: border-box; /* Includes padding and border in the element's total size */
+}
+
+.left-column, .right-column {
+    display: flex; /* Makes the columns flex containers too, for vertical alignment if needed */
+    flex-direction: column; /* Aligns column content vertically */
+    justify-content: flex-start; /* Aligns content to the top */
+    padding: 20px; /* Adds some padding inside the columns */
+    box-sizing: border-box; /* Includes padding and border in the element's total size */
+}
+
+.left-column {
+    flex: 0 0 30%; /* Assigns 30% of the container's width to the left column */
+    border: 2px solid black;
+    border-radius: 15px;
+}
+
+.right-column {
+    flex: 1; /* Allows the right column to fill the remaining space */
+    border: 2px solid black;
+    border-radius: 15px;
+    margin-left: 20px; /* Adds spacing between the two columns */
+}
+
+/* macOS-inspired button style */
+.upload-button {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px; /* Larger font size */
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.upload-button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
