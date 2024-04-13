@@ -2,7 +2,7 @@
 
 import os
 
-from button_callbacks import register_button_callbacks
+from button_callbacks import ButtonCallbackManager, register_button_callbacks
 from dash import Dash
 from layout import create_layout
 
@@ -24,7 +24,7 @@ app = Dash(__name__, assets_folder=assets_folder, title="Brokerage Data")
 
 # Create layout
 app.layout = create_layout(app)
-register_button_callbacks(app)
+register_button_callbacks(app, ButtonCallbackManager())
 # ==========================================================================================
 # ==========================================================================================
 

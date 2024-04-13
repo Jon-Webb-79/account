@@ -20,19 +20,11 @@ from db import create_funds_df
 # Insert Code here
 
 
-def register_button_callbacks(app: Dash) -> None:
-    """
-    Contains all button callback functions to support a Dash object
+class ButtonCallbackManager:
 
-    :param app: A Dash object
-    """
-
-    @app.callback(
-        [Output("db-path", "data"), Output("error-message", "children")],
-        Input("upload-file", "contents"),
-        State("upload-file", "filename"),
-    )
-    def get_filename(contents: str, filename: str) -> Tuple[str, Union[str, html.Div]]:
+    def get_filename(
+        self, contents: str, filename: str
+    ) -> Tuple[str, Union[str, html.Div]]:
         """
         Processes the uploaded file and returns the path to a temporarily saved
         database file.
@@ -70,12 +62,8 @@ def register_button_callbacks(app: Dash) -> None:
 
     # ------------------------------------------------------------------------------------------
 
-    @app.callback(
-        Output("funds-buttons", "children"),
-        Output("fund-list", "data"),
-        Input("db-path", "data"),
-    )
     def generate_fund_buttons(
+        self,
         file_path: str,
     ) -> tuple[Union[list[html.Button], html.Div], list[str]]:
         """
@@ -118,13 +106,9 @@ def register_button_callbacks(app: Dash) -> None:
 
     # ------------------------------------------------------------------------------------------
 
-    @app.callback(
-        Output({"type": "fund-button", "index": ALL}, "className"),
-        [Input({"type": "fund-button", "index": ALL}, "n_clicks")],
-        [State("fund-list", "data")],
-        prevent_initial_call=True,
-    )
-    def update_button_styles(n_clicks: list[int], funds: list[str]) -> list[str]:
+    def update_fund_button_styles(
+        self, n_clicks: list[int], funds: list[str]
+    ) -> list[str]:
         """
         Updates the className for fund buttons to indicate which one is active.
 
@@ -154,13 +138,9 @@ def register_button_callbacks(app: Dash) -> None:
 
     # ------------------------------------------------------------------------------------------
 
-    @app.callback(
-        Output({"type": "duration-button", "index": ALL}, "className"),
-        [Input({"type": "duration-button", "index": ALL}, "n_clicks")],
-        [State("duration-list", "data")],
-        prevent_initial_call=True,
-    )
-    def update_duration_button_styles(n_clicks: list[int], funds: list[str]) -> list[str]:
+    def update_duration_button_styles(
+        self, n_clicks: list[int], funds: list[str]
+    ) -> list[str]:
         """
         Updates the className for duration buttons to indicate which one is active.
 
@@ -188,6 +168,37 @@ def register_button_callbacks(app: Dash) -> None:
             for fund in funds
         ]
         return class_names
+
+
+# ==========================================================================================
+# ==========================================================================================
+
+
+def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
+    app.callback(
+        [Output("db-path", "data"), Output("error-message", "children")],
+        Input("upload-file", "contents"),
+        State("upload-file", "filename"),
+    )(manager.get_filename)
+
+    app.callback(
+        [Output("funds-buttons", "children"), Output("fund-list", "data")],
+        Input("db-path", "data"),
+    )(manager.generate_fund_buttons)
+
+    app.callback(
+        Output({"type": "fund-button", "index": ALL}, "className"),
+        Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+        State("fund-list", "data"),
+        prevent_initial_call=True,
+    )(manager.update_fund_button_styles)
+
+    app.callback(
+        Output({"type": "duration-button", "index": ALL}, "className"),
+        [Input({"type": "duration-button", "index": ALL}, "n_clicks")],
+        [State("duration-list", "data")],
+        prevent_initial_call=True,
+    )(manager.update_duration_button_styles)
 
 
 # ==========================================================================================
