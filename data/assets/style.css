@@ -6,7 +6,7 @@ html, body {
     height: 100%; /* Make sure the html and body elements fill the screen */
 }
 
-#container {
+#app-container {
     display: flex; /* Establishes a flex container */
     flex-direction: row; /* Aligns children (the columns) horizontally */
     height: 95vh; /* Sets the container's height to fill the viewport */
@@ -69,6 +69,30 @@ html, body {
 
 .dynamic-button:hover {
     background-color: #0056b3; /* Darker shade on hover */
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+}
+
+.dynamic-button-active {
+    background-color: #0106b3; /* Darker shade when active */
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
 }
 
 .table-container {
