@@ -3,8 +3,8 @@ import base64
 import tempfile
 from typing import Tuple, Union
 
-from dash import Dash, html, no_update
-from dash.dependencies import Input, Output, State
+from dash import Dash, callback_context, html, no_update
+from dash.dependencies import ALL, Input, Output, State
 from dash.exceptions import PreventUpdate
 from db import create_funds_df
 
@@ -70,8 +70,14 @@ def register_button_callbacks(app: Dash) -> None:
 
     # ------------------------------------------------------------------------------------------
 
-    @app.callback(Output("funds-buttons", "children"), Input("db-path", "data"))
-    def generate_fund_buttons(file_path: str) -> Union[list[html.Button], html.Div]:
+    @app.callback(
+        Output("funds-buttons", "children"),
+        Output("fund-list", "data"),
+        Input("db-path", "data"),
+    )
+    def generate_fund_buttons(
+        file_path: str,
+    ) -> tuple[Union[list[html.Button], html.Div], list[str]]:
         """
         Generates HTML button elements for each unique fund found in the database
         file specified by the file path.
@@ -87,6 +93,7 @@ def register_button_callbacks(app: Dash) -> None:
         :return: A list of HTML button components, each representing a unique
                  fund from the database. If an error occurs during the file
                  processing, it returns an HTML Div containing an error message.
+                 This function also assigns the list of button names to fund-list
 
         If the file path is not provided, this callback prevents further updates
         to avoid processing errors.
@@ -101,12 +108,86 @@ def register_button_callbacks(app: Dash) -> None:
                     fund,
                     id={"type": "fund-button", "index": fund},
                     className="dynamic-button",
+                    n_clicks=0,
                 )
                 for fund in df["Fund"].unique()
             ]
-            return fund_buttons
+            return fund_buttons, df["Fund"].unique().tolist()
         except Exception as e:
-            return html.Div([f"An error occurred processing the .db file: {e}"])
+            return html.Div([f"An error occurred processing the .db file: {e}"]), []
+
+    # ------------------------------------------------------------------------------------------
+
+    @app.callback(
+        Output({"type": "fund-button", "index": ALL}, "className"),
+        [Input({"type": "fund-button", "index": ALL}, "n_clicks")],
+        [State("fund-list", "data")],
+        prevent_initial_call=True,
+    )
+    def update_button_styles(n_clicks: list[int], funds: list[str]) -> list[str]:
+        """
+        Updates the className for fund buttons to indicate which one is active.
+
+        :param n_clicks: A list of integers reflecting the number of clicks for
+                         each button.
+        :param funds: A list of strings that are the names of the funds.
+        :return: A list of class names where the active button receives a
+                 different class.
+
+        If no funds are available, the update is prevented to avoid errors.
+        The function determines which button was clicked last and updates its
+        class to active.
+        """
+        if not funds:
+            raise PreventUpdate
+
+        # Determine which button was clicked using Dash's callback context
+        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        triggered_index = eval(triggered_id)["index"]
+
+        # Update the className for each button based on which one was clicked
+        class_names = [
+            "dynamic-button-active" if fund == triggered_index else "dynamic-button"
+            for fund in funds
+        ]
+        return class_names
+
+    # ------------------------------------------------------------------------------------------
+
+    @app.callback(
+        Output({"type": "duration-button", "index": ALL}, "className"),
+        [Input({"type": "duration-button", "index": ALL}, "n_clicks")],
+        [State("duration-list", "data")],
+        prevent_initial_call=True,
+    )
+    def update_duration_button_styles(n_clicks: list[int], funds: list[str]) -> list[str]:
+        """
+        Updates the className for duration buttons to indicate which one is active.
+
+        :param n_clicks: A list of integers reflecting the number of clicks for
+                         each button.
+        :param durations: A list of strings that are the labels for the duration
+                          buttons.
+        :return: A list of class names where the active button receives a
+                 different class.
+
+        This function prevents updates if no durations are provided and uses
+        the last clicked button to determine which className to update for
+        indicating the active state.
+        """
+        if not funds:
+            raise PreventUpdate
+
+        # Determine which button was clicked using Dash's callback context
+        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        triggered_index = eval(triggered_id)["index"]
+
+        # Update the className for each button based on which one was clicked
+        class_names = [
+            "dynamic-button-active" if fund == triggered_index else "dynamic-button"
+            for fund in funds
+        ]
+        return class_names
 
 
 # ==========================================================================================

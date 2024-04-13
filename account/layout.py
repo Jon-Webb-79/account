@@ -21,10 +21,15 @@ def create_layout(app: Dash) -> html.Div:
     :param app: A Dash object
     :return: An html.Div containing the layout of the application
     """
+    button_labels = ["Total", "YTD", "1YR", "3MO", "1MO", "1WK"]
+
     return html.Div(
         [
             # Provides a variable to which the database file name can be assigned
             dcc.Store(id="db-path"),
+            # Store the fund list data as a list
+            dcc.Store(id="fund-list"),
+            # Store to contain error messages
             html.Div(id="error-message"),
             # ==========================================================================================
             # ==========================================================================================
@@ -39,7 +44,9 @@ def create_layout(app: Dash) -> html.Div:
                     ),
                     # Container for displaying file info and buttons
                     html.Div(id="file-info"),
-                    html.Div(id="funds-buttons"),  # This will hold the fund buttons
+                    html.Div(
+                        id="funds-buttons", style={"padding": "10px"}
+                    ),  # This will hold the fund buttons
                     # Container for displaying the table below the buttons
                     html.Div(
                         id="table-container",
@@ -58,12 +65,30 @@ def create_layout(app: Dash) -> html.Div:
             # Right column for other content
             html.Div(
                 [
-                    # Add the graph at the top of the right column
-                    dcc.Graph(
-                        id="close-price-plot",
-                    ),
-                    dcc.Graph(
-                        id="candlestick-plot",
+                    # Graphs at the top of the right column
+                    dcc.Graph(id="close-price-plot"),
+                    dcc.Graph(id="candlestick-plot"),
+                    # Div for the buttons below the candlestick-plot
+                    html.Div(
+                        [
+                            # Create buttons with indexed ids
+                            html.Button(
+                                label,
+                                id={"type": "duration-button", "index": label},
+                                className="dynamic-button",
+                            )
+                            for label in button_labels
+                        ]
+                        + [
+                            dcc.Store(id="duration-list", data=button_labels)
+                        ],  # Store for button labels
+                        style={
+                            "display": "flex",  # Align buttons horizontally
+                            "justify-content": "center",  # Center buttons in the div
+                            "padding-top": "10px",
+                            "gap": "10px",  # Space between the buttons
+                        },
+                        id="duration-buttons",
                     ),
                 ],
                 className="right-column",
