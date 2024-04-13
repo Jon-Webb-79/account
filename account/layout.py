@@ -1,6 +1,6 @@
 # Import necessary packages here
 
-from dash import dcc, html
+from dash import Dash, dcc, html
 
 # ==========================================================================================
 # ==========================================================================================
@@ -14,7 +14,13 @@ from dash import dcc, html
 # Insert Code here
 
 
-def create_layout(app):
+def create_layout(app: Dash) -> html.Div:
+    """
+    This function creates the layout for a Dash application as an html.div
+
+    :param app: A Dash object
+    :return: An html.Div containing the layout of the application
+    """
     return html.Div(
         [
             # Provides a variable to which the database file name can be assigned
