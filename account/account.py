@@ -104,6 +104,7 @@ def display_fund_data(n_clicks_list, btn_id_list, db_data):
     df["Credit"] = df["Credit"].apply(lambda x: f"${x:,.2f}")
     df["Close"] = df["Close"].apply(lambda x: f"${x:,.2f}")
     df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
+    df["Percentage"] = df["Percentage"].apply(lambda x: f"{x:,.2f}%")
     # Display the specific columns
     return dash_table.DataTable(
         data=df.to_dict("records"),
@@ -111,6 +112,7 @@ def display_fund_data(n_clicks_list, btn_id_list, db_data):
             {"name": "Date", "id": "Date"},
             {"name": "Credit ($)", "id": "Credit"},
             {"name": "Close ($)", "id": "Close"},
+            {"name": "Percentage (%)", "id": "Percentage"},
         ],
         fixed_rows={"headers": True},
         style_table={"overflowY": "auto", "maxHeight": "800px"},
@@ -167,7 +169,13 @@ def update_graph(n_clicks_list, btn_id_list, db_data):
         y="Close",
         title=f"{name} Close Price Time History",
         template="seaborn",
+        hover_data={
+            "Date": "|%B %d, %Y",  # Custom date format
+            "Close": ":.2f",  # Custom number format
+        },
     )
+    fig.update_traces(hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}")
+
     fig.update_layout(
         title={
             "text": "<b>Close Price Time History</b>",
@@ -222,10 +230,13 @@ def update_candlestick(n_clicks_list, btn_id_list, db_data):
 
     # Preparing data for the plot
     df["Date"] = pd.to_datetime(df["Date"])  # Ensure date is datetime type
-    df.sort_values("Date", inplace=True)
+    # Assuming df is already prepared and sorted
     df["PrevPercentage"] = df["Percentage"].shift(1).fillna(df["Percentage"][0])
     df["PercentChange"] = df["Percentage"] - df["PrevPercentage"]
     df["color"] = np.where(df["PercentChange"] >= 0, "green", "red")
+
+    # Prepare customdata as a 2D numpy array, each row containing data for one bar
+    customdata = np.column_stack((df["Percentage"], df["PercentChange"]))
 
     # Create the candlestick-like plot
     fig = go.Figure(
@@ -235,8 +246,12 @@ def update_candlestick(n_clicks_list, btn_id_list, db_data):
                 y=df["PercentChange"],
                 base=df["PrevPercentage"],
                 marker_color=df["color"],
-                hoverinfo="text",
-                text=df["PercentChange"].apply(lambda x: f"{x:.2f}%"),
+                customdata=customdata,
+                hovertemplate=(
+                    "Date: %{x}<br>"
+                    + "Cumulative Change: %{customdata[0]:.2f}%<br>"
+                    + "Day Change: %{customdata[1]:.2f}%"
+                ),
             )
         ]
     )
