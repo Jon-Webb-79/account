@@ -37,7 +37,7 @@ html, body {
 /* macOS-inspired button style */
 .upload-button {
     display: inline-block;
-    padding: 12px 24px;
+    padding: 14px 24px;
     font-size: 16px; /* Larger font size */
     color: #fff;
     background-color: #007bff;
@@ -50,6 +50,11 @@ html, body {
 
 .upload-button:hover {
     background-color: #0056b3; /* Darker shade on hover */
+}
+
+#upload-file {
+    width: fit-content; /* Makes the upload component wrap tightly around its content */
+    display: inline-block; /* Ensures the upload component does not stretch */
 }
 
 /* styles.css in the 'assets' directory */
