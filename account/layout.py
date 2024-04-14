@@ -29,7 +29,8 @@ def create_layout(app: Dash) -> html.Div:
             dcc.Store(id="db-path"),
             # Store the fund list data as a list
             dcc.Store(id="fund-list"),
-            # Store to contain error messages
+            # Store the initial JSON data for data
+            dcc.Store(id="fund-data"),
             html.Div(id="error-message"),
             # ==========================================================================================
             # ==========================================================================================
@@ -55,10 +56,17 @@ def create_layout(app: Dash) -> html.Div:
                 ],
                 className="left-column",
                 style={
-                    "width": "100%",
-                    "display": "inline-block",
+                    "flex": "1 1 auto",  # Flex-grow, flex-shrink, flex-basis
+                    "min-width": "30%",  # Minimum width to prevent shrinking too small
+                    "max-width": "70%",  # Maximum width
                     "verticalAlign": "top",
+                    "padding": "20px",
                 },
+                # style={
+                #     "width": "100%",
+                #     "display": "inline-block",
+                #     "verticalAlign": "top",
+                # },
             ),
             # ==========================================================================================
             # ==========================================================================================
@@ -96,7 +104,13 @@ def create_layout(app: Dash) -> html.Div:
                     ),
                 ],
                 className="right-column",
-                style={"width": "70%", "display": "inline-block", "verticalAlign": "top"},
+                style={
+                    "flex": "3 1 auto",  # Larger flex-grow to take more space
+                    "min-width": "70%",  # Minimum width to prevent shrinking too small
+                    "max-width": "100%",  # Maximum width to control expansion
+                    "display": "inline-block",
+                    "verticalAlign": "top",
+                },
             ),
         ],
         id="app-container",

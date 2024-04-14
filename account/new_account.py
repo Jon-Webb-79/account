@@ -21,6 +21,7 @@ from layout import create_layout
 # Set the path to the assets folder and instantiate Dash object
 assets_folder = os.path.join(os.getcwd(), "../data", "assets")
 app = Dash(__name__, assets_folder=assets_folder, title="Brokerage Data")
+app.config.suppress_callback_exceptions = True
 
 # Create layout
 app.layout = create_layout(app)

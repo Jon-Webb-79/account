@@ -196,6 +196,7 @@ def create_position_df(db_name: str, account: str) -> pd.DataFrame:
         df = db.execute_query(query)
 
     df["Date"] = pd.to_datetime(df["Date"], format="%m-%d-%Y")
+
     # Create Cum Credit
     df["CumCredit"] = df["Credit"].cumsum()
     # Create daily delta value
@@ -204,6 +205,8 @@ def create_position_df(db_name: str, account: str) -> pd.DataFrame:
     df["PercDelta"] = df["DollarDelta"] / df["Close"] * 100.0
     # Create Cummulative % columm
     df["Percentage"] = ((df["Close"] / df["CumCredit"]) - 1.0) * 100.0
+
+    df.sort_values(by="Date")
     return df
 
 
