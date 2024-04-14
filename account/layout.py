@@ -75,7 +75,11 @@ def create_layout(app: Dash) -> html.Div:
                             html.Button(
                                 label,
                                 id={"type": "duration-button", "index": label},
-                                className="dynamic-button",
+                                className=(
+                                    "dynamic-button"
+                                    if label != "Total"
+                                    else "dynamic-button-active"
+                                ),
                             )
                             for label in button_labels
                         ]

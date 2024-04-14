@@ -1,5 +1,6 @@
 # Import necessary packages here
 import base64
+import json
 import tempfile
 from typing import Tuple, Union
 
@@ -139,7 +140,7 @@ class ButtonCallbackManager:
     # ------------------------------------------------------------------------------------------
 
     def update_duration_button_styles(
-        self, n_clicks: list[int], funds: list[str]
+        self, n_clicks: list[int], durations: list[str]
     ) -> list[str]:
         """
         Updates the className for duration buttons to indicate which one is active.
@@ -155,19 +156,22 @@ class ButtonCallbackManager:
         the last clicked button to determine which className to update for
         indicating the active state.
         """
-        if not funds:
-            raise PreventUpdate
+        if not callback_context.triggered:
+            # If no button has been clicked yet, maintain initial state
+            return [
+                "dynamic-button-active" if duration == "Total" else "dynamic-button"
+                for duration in durations
+            ]
 
-        # Determine which button was clicked using Dash's callback context
-        triggered_id = callback_context.triggered[0]["prop_id"].split(".")[0]
-        triggered_index = eval(triggered_id)["index"]
+        # Determine which button was clicked
+        triggered_id = callback_context.triggered[0]["prop_id"]
+        triggered_info = json.loads(triggered_id.split(".")[0])
+        triggered_index = triggered_info["index"]
 
-        # Update the className for each button based on which one was clicked
-        class_names = [
-            "dynamic-button-active" if fund == triggered_index else "dynamic-button"
-            for fund in funds
+        return [
+            "dynamic-button-active" if duration == triggered_index else "dynamic-button"
+            for duration in durations
         ]
-        return class_names
 
 
 # ==========================================================================================
