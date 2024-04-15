@@ -180,36 +180,88 @@ class ButtonCallbackManager:
     def load_and_store_data(
         self,
         fund_n_clicks: list[int],
+        duration_n_clicks: list[int],
         db_filename: str,
         duration_class: list[str],
         duration_id: list[dict[str, str]],
-    ) -> tuple[str, dash_table.DataTable]:
+        fund_class: list[str],
+        fund_id: list[dict[str, str]],
+    ) -> float:
+        """
+        Fetches data based on the latest clicked fund or duration button,
+        filters it, and updates the dashboard.
+
+        This method decides whether to fetch new data based on a fund button
+        click or apply a new duration filter based on a duration button click.
+        It also identifies which fund or duration button was last activated,
+        fetches and processes the corresponding data, then returns a table and
+        two plotly graph components for the UI.
+
+        Parameters
+        ----------
+        :fund_n_clicks (list[int]): List containing the number of clicks for each
+                                    fund button.
+        :duration_n_clicks (list[int]): List containing the number of clicks for
+                                        each duration button.
+        :db_filename (str): The filepath to the database file from which data is
+                            fetched.
+        :duration_class (list[str]): List containing the class names of duration
+                                     buttons to identify which is active.
+        :duration_id (list[dict[str, str]]): List of dictionaries identifying
+                                             each duration button by type and index.
+        :fund_class (list[str]): List containing the class names of fund buttons
+                                 to identify which is active.
+        :fund_id (list[dict[str, str]]): List of dictionaries identifying each
+                                         fund button by type and index.
+
+        Returns
+        -------
+        :tuple[dash_table.DataTable, dcc.Graph, dcc.Graph]: A tuple containing a
+                                                            Dash DataTable and two
+                                                            Plotly Graph objects
+          (one line plot and one candlestick plot) representing the processed
+           data for display.
+
+        Raises
+        ------
+        :PreventUpdate: If no button was clicked, to prevent the callback from
+                        executing without user interaction.
+        """
+
         ctx = callback_context
         if not ctx.triggered:
             raise PreventUpdate
+
         triggered_info = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])
         triggered_type = triggered_info["type"]
+        button_name = triggered_info["index"]
 
-        if triggered_type != "fund-button":
-            raise PreventUpdate  # Ensure only fund-button triggers proceed
+        filter_time = "Total"
+        if triggered_type == "fund-button":
+            for index, i in enumerate(duration_class):
+                if i == "dynamic-button-active":
+                    filter_time = duration_id[index]["index"]
+                    break
 
-        button_index = triggered_info["index"]
+        else:
+            filter_time = button_name
+            button_name = "none"
+            for index, i in enumerate(fund_class):
+                if i == "dynamic-button-active":
+                    button_name = fund_id[index]["index"]
+                    break
+            if button_name == "none":
+                button_name = fund_id[index][0]
 
-        df = create_position_df(db_filename, button_index).round(2)
-        json_data = df.to_json(date_format="iso", orient="split")
+        df = create_position_df(db_filename, button_name).round(2)
         if df.empty:
             return None  # Optionally handle empty data case
 
-        filter_time = "Total"
-        for index, i in enumerate(duration_class):
-            if i == "dynamic-button-active":
-                filter_time = duration_id[index]["index"]
-                break
         filtered_df = self._filter_dataframe_by_duration(df, filter_time).copy()
 
-        time_plot = time_series_plot(filtered_df, button_index)
+        time_plot = time_series_plot(filtered_df, button_name)
         candle_plot = candlestick_plot(filtered_df)
-        return json_data, self._create_table(filtered_df), time_plot, candle_plot
+        return self._create_table(filtered_df), time_plot, candle_plot
 
     # ------------------------------------------------------------------------------------------
 
@@ -302,39 +354,22 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
 
     app.callback(
         [
-            Output("fund-data", "data"),
             Output("table-container", "children"),
             Output("close-price-plot", "figure"),
             Output("candlestick-plot", "figure"),
         ],
-        Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+        [
+            Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+            Input({"type": "duration-button", "index": ALL}, "n_clicks"),
+        ],
         [
             State("db-path", "data"),
             State({"type": "duration-button", "index": ALL}, "className"),
             State({"type": "duration-button", "index": ALL}, "id"),
+            State({"type": "fund-button", "index": ALL}, "className"),
+            State({"type": "fund-button", "index": ALL}, "id"),
         ],
     )(manager.load_and_store_data)
-
-    # app.callback(
-    #     [Output("fund-data", "data"), Output("table-container", "children"),
-    #      Output("close-price-plot", "figure")],
-    #     Input({"type": "fund-button", "index": ALL}, "n_clicks"),
-    #     [
-    #         State("db-path", "data"),
-    #         State({"type": "duration-button", "index": ALL}, "className"),
-    #         State({"type": "duration-button", "index": ALL}, "id"),
-    #     ],
-    # )(manager.load_and_store_data)
-
-    # app.callback(
-    #     [Output("fund-data", "data"), Output("table-container", "children")],
-    #     Input({"type": "fund-button", "index": ALL}, "n_clicks"),
-    #     [
-    #         State("db-path", "data"),
-    #         State({"type": "duration-button", "index": ALL}, "className"),
-    #         State({"type": "duration-button", "index": ALL}, "id"),
-    #     ],
-    # )(manager.load_and_store_data)
 
 
 # ==========================================================================================
