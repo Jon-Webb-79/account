@@ -9,6 +9,7 @@ from dash import Dash, callback_context, dash_table, html, no_update
 from dash.dependencies import ALL, Input, Output, State
 from dash.exceptions import PreventUpdate
 from db import create_funds_df, create_position_df
+from plot import candlestick_plot, time_series_plot
 
 # ==========================================================================================
 # ==========================================================================================
@@ -204,15 +205,15 @@ class ButtonCallbackManager:
             if i == "dynamic-button-active":
                 filter_time = duration_id[index]["index"]
                 break
+        filtered_df = self._filter_dataframe_by_duration(df, filter_time).copy()
 
-        filtered_df = self._filter_dataframe_by_duration(df, filter_time)
-
-        return json_data, self._create_table(filtered_df)
+        time_plot = time_series_plot(filtered_df, button_index)
+        candle_plot = candlestick_plot(filtered_df)
+        return json_data, self._create_table(filtered_df), time_plot, candle_plot
 
     # ------------------------------------------------------------------------------------------
 
     def _create_table(self, df: pd.DataFrame) -> pd.DataFrame:
-
         # Display the specific columns
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
         dtable = dash_table.DataTable(
@@ -300,7 +301,12 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
     )(manager.update_duration_button_styles)
 
     app.callback(
-        [Output("fund-data", "data"), Output("table-container", "children")],
+        [
+            Output("fund-data", "data"),
+            Output("table-container", "children"),
+            Output("close-price-plot", "figure"),
+            Output("candlestick-plot", "figure"),
+        ],
         Input({"type": "fund-button", "index": ALL}, "n_clicks"),
         [
             State("db-path", "data"),
@@ -308,6 +314,27 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
             State({"type": "duration-button", "index": ALL}, "id"),
         ],
     )(manager.load_and_store_data)
+
+    # app.callback(
+    #     [Output("fund-data", "data"), Output("table-container", "children"),
+    #      Output("close-price-plot", "figure")],
+    #     Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+    #     [
+    #         State("db-path", "data"),
+    #         State({"type": "duration-button", "index": ALL}, "className"),
+    #         State({"type": "duration-button", "index": ALL}, "id"),
+    #     ],
+    # )(manager.load_and_store_data)
+
+    # app.callback(
+    #     [Output("fund-data", "data"), Output("table-container", "children")],
+    #     Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+    #     [
+    #         State("db-path", "data"),
+    #         State({"type": "duration-button", "index": ALL}, "className"),
+    #         State({"type": "duration-button", "index": ALL}, "id"),
+    #     ],
+    # )(manager.load_and_store_data)
 
 
 # ==========================================================================================
