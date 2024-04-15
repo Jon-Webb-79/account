@@ -265,6 +265,93 @@ class ButtonCallbackManager:
 
     # ------------------------------------------------------------------------------------------
 
+    def update_value_display(
+        self,
+        fund_clicks,
+        duration_clicks,
+        db_filename,
+        duration_class,
+        duration_id,
+        fund_class,
+        fund_id,
+    ) -> str:
+        ctx = callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+
+        triggered_info = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])
+        triggered_type = triggered_info["type"]
+        button_name = triggered_info["index"]
+
+        filter_time = "Total"
+        if triggered_type == "fund-button":
+            for index, i in enumerate(duration_class):
+                if i == "dynamic-button-active":
+                    filter_time = duration_id[index]["index"]
+                    break
+
+        else:
+            filter_time = button_name
+            button_name = "none"
+            for index, i in enumerate(fund_class):
+                if i == "dynamic-button-active":
+                    button_name = fund_id[index]["index"]
+                    break
+            if button_name == "none":
+                button_name = fund_id[index][0]
+
+        df = create_position_df(db_filename, button_name).round(2)
+        if df.empty:
+            return None  # Optionally handle empty data case
+
+        filtered_df = self._filter_dataframe_by_duration(df, filter_time).copy()
+        min_date = str(filtered_df["Date"].min())[0:10]
+        max_date = str(filtered_df["Date"].max())[0:10]
+
+        # Placeholder values, replace these with actual calculations later
+        sum_contributions = filtered_df["Credit"].sum()
+        total_value = filtered_df["Close"].iloc[-1]
+
+        if sum_contributions != 0.0:
+            earned_value = total_value - sum_contributions
+        else:
+            earned_value = total_value - filtered_df["Close"].iloc[0]
+
+        return html.Div(
+            [
+                html.H3("Duration:", style={"margin-bottom": "5px", "fontSize": "32px"}),
+                html.H4(f"{min_date} to {max_date}", style={"margin-top": "0"}),
+                html.Ul(
+                    [
+                        html.Li(
+                            f"Total Value: ${total_value:,.2f}",
+                            style={"fontSize": "18px"},
+                        ),
+                        html.Li(
+                            f"Earned Value: ${earned_value:,.2f}",
+                            style={"fontSize": "18px"},
+                        ),
+                    ],
+                    style={"list-style-type": "none", "padding": "0"},
+                ),
+            ],
+            style={
+                "padding": "20px",
+                "border": "2px solid #ddd",
+                "border-radius": "10px",
+                "color": "#333",
+                "background-color": "#f9f9f9",
+                "font-family": "'Helvetica Neue', Arial, sans-serif",
+                "line-height": "1.6",
+                "fontSize": "16px",
+                "box-shadow": "0 2px 4px rgba(0,0,0,0.1)",
+                "margin": "10px 0",
+            },
+        )
+
+    # ==========================================================================================
+    # ==========================================================================================
+
     def _create_table(self, df: pd.DataFrame) -> pd.DataFrame:
         # Display the specific columns
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
@@ -298,8 +385,7 @@ class ButtonCallbackManager:
         )
         return dtable
 
-    # ==========================================================================================
-    # ==========================================================================================
+    # ------------------------------------------------------------------------------------------
 
     def _filter_dataframe_by_duration(
         self, df: pd.DataFrame, duration: str
@@ -370,6 +456,24 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
             State({"type": "fund-button", "index": ALL}, "id"),
         ],
     )(manager.load_and_store_data)
+
+    app.callback(
+        Output("value-display", "children"),
+        [
+            Input({"type": "fund-button", "index": ALL}, "n_clicks"),
+            Input({"type": "duration-button", "index": ALL}, "n_clicks"),
+        ],
+        [
+            State(
+                "db-path", "data"
+            ),  # Assuming you might need this for actual calculations later
+            State({"type": "duration-button", "index": ALL}, "className"),
+            State({"type": "duration-button", "index": ALL}, "id"),
+            State({"type": "fund-button", "index": ALL}, "className"),
+            State({"type": "fund-button", "index": ALL}, "id"),
+        ],
+        prevent_initial_call=True,
+    )(manager.update_value_display)
 
 
 # ==========================================================================================

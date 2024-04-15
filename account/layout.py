@@ -48,6 +48,8 @@ def create_layout(app: Dash) -> html.Div:
                     html.Div(
                         id="funds-buttons", style={"padding": "10px"}
                     ),  # This will hold the fund buttons
+                    # dcc.Markdown(id='value-display'),
+                    html.Div(id="value-display", style={"margin": "20px 0"}),
                     # Container for displaying the table below the buttons
                     html.Div(
                         id="table-container",
@@ -62,11 +64,6 @@ def create_layout(app: Dash) -> html.Div:
                     "verticalAlign": "top",
                     "padding": "20px",
                 },
-                # style={
-                #     "width": "100%",
-                #     "display": "inline-block",
-                #     "verticalAlign": "top",
-                # },
             ),
             # ==========================================================================================
             # ==========================================================================================
