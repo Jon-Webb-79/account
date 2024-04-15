@@ -8,6 +8,8 @@ import pandas as pd
 from dash import Dash, callback_context, dash_table, html, no_update
 from dash.dependencies import ALL, Input, Output, State
 from dash.exceptions import PreventUpdate
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from db import create_funds_df, create_position_df
 from plot import candlestick_plot, time_series_plot
 
@@ -311,6 +313,21 @@ class ButtonCallbackManager:
         # Placeholder values, replace these with actual calculations later
         sum_contributions = filtered_df["Credit"].sum()
         total_value = filtered_df["Close"].iloc[-1]
+        earned_percent = (
+            filtered_df["Percentage"].iloc[-1] - filtered_df["Percentage"].iloc[0]
+        )
+
+        # Parse the date strings into datetime objects
+        min_date_dt = parser.parse(min_date)
+        max_date_dt = parser.parse(max_date)
+
+        # Calculate the difference
+        difference = relativedelta(max_date_dt, min_date_dt)
+
+        # Extract years, months, and days
+        years = difference.years
+        months = difference.months
+        days = difference.days
 
         if sum_contributions != 0.0:
             earned_value = total_value - sum_contributions
@@ -319,17 +336,48 @@ class ButtonCallbackManager:
 
         return html.Div(
             [
-                html.H3("Duration:", style={"margin-bottom": "5px", "fontSize": "32px"}),
-                html.H4(f"{min_date} to {max_date}", style={"margin-top": "0"}),
+                html.H3(
+                    f"{min_date} to {max_date}",
+                    style={"margin-top": "0", "fontSize": "22px"},
+                ),
+                html.H3(
+                    f"Duration: {years} Years, {months} Months, {days} Days",
+                    style={"margin-bottom": "5px", "fontSize": "32px"},
+                ),
                 html.Ul(
                     [
                         html.Li(
-                            f"Total Value: ${total_value:,.2f}",
-                            style={"fontSize": "18px"},
+                            [
+                                html.Span("Total Value: ", style={"fontWeight": "bold"}),
+                                html.Span(
+                                    f"${total_value:,.2f}", style={"fontWeight": "bold"}
+                                ),
+                            ],
+                            style={"fontSize": "20px"},
                         ),
                         html.Li(
-                            f"Earned Value: ${earned_value:,.2f}",
-                            style={"fontSize": "18px"},
+                            [
+                                html.Span("Earned Value: "),
+                                html.Span(
+                                    f"${earned_value:,.2f}",
+                                    style={
+                                        "color": "green" if earned_value >= 0 else "red"
+                                    },
+                                ),
+                            ],
+                            style={"fontSize": "20px"},
+                        ),
+                        html.Li(
+                            [
+                                html.Span("Earned Percent: "),
+                                html.Span(
+                                    f"{earned_percent:,.2f}%",
+                                    style={
+                                        "color": "green" if earned_percent >= 0 else "red"
+                                    },
+                                ),
+                            ],
+                            style={"fontSize": "20px"},
                         ),
                     ],
                     style={"list-style-type": "none", "padding": "0"},

@@ -24,12 +24,15 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
 
     Parameters
     ----------
-    :param df: Dataframe containing the data with 'Date' and 'Close' columns.
+    df : pd.DataFrame
+        Dataframe containing the data with 'Date' and 'Close' columns.
+    name : str
+        Name of the dataset or title component.
 
     Returns
     -------
-    :return: Plotly Graph object visualizing the value of close out price versus time.
-
+    dcc.Graph
+        Plotly Graph object visualizing the value of close out price versus time.
     """
     fig = px.line(
         df,
@@ -42,7 +45,11 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
             "Close": ":.2f",  # Custom number format
         },
     )
-    fig.update_traces(hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}")
+    fig.update_traces(
+        hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}",
+        fill="tozeroy",
+        fillcolor="rgba(173, 216, 230, 0.2)",
+    )
 
     fig.update_layout(
         title={
@@ -68,6 +75,58 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
         height=650,
     )
     return fig
+
+
+# def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
+#     """
+#     Creates a time-series plot for closeout price over time in a DataFrame.
+#
+#     Parameters
+#     ----------
+#     :param df: Dataframe containing the data with 'Date' and 'Close' columns.
+#
+#     Returns
+#     -------
+#     :return: Plotly Graph object visualizing the value of close out price versus time.
+#
+#     """
+#     fig = px.line(
+#         df,
+#         x="Date",
+#         y="Close",
+#         title=f"{name} Close Price Time History",
+#         template="seaborn",
+#         hover_data={
+#             "Date": "|%B %d, %Y",  # Custom date format
+#             "Close": ":.2f",  # Custom number format
+#         },
+#     )
+#     fig.update_traces(hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}")
+#
+#     fig.update_layout(
+#         title={
+#             "text": "<b>Close Price Time History</b>",
+#             "y": 0.9,
+#             "x": 0.5,
+#             "xanchor": "center",
+#             "yanchor": "top",
+#             "font": {"family": "Arial", "size": 24, "color": "black"},
+#         },
+#         xaxis_title="Date",
+#         yaxis_title="Close ($)",
+#         font=dict(family="Courier New, monospace", size=30, color="black"),
+#         xaxis=dict(
+#             title_font=dict(size=22, family="Courier New, monospace"),
+#             tickfont=dict(size=18, family="Courier New, monospace"),
+#         ),
+#         yaxis=dict(
+#             title_font=dict(size=22, family="Courier New, monospace"),
+#             tickfont=dict(size=18, family="Courier New, monospace"),
+#         ),
+#         autosize=True,
+#         height=650,
+#     )
+#     return fig
 
 
 # ------------------------------------------------------------------------------------------
