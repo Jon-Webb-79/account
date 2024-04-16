@@ -105,3 +105,10 @@ html, body {
     justify-content: center;
     align-items: center;
 }
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    font-size: 18px;
+    font-family: Helvetica Neu;
+}

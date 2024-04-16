@@ -31,7 +31,6 @@ def create_layout(app: Dash) -> html.Div:
             dcc.Store(id="fund-list"),
             # Store the initial JSON data for data
             dcc.Store(id="fund-data"),
-            html.Div(id="error-message"),
             # ==========================================================================================
             # ==========================================================================================
             # Left column for file upload, buttons, and the table
@@ -43,11 +42,31 @@ def create_layout(app: Dash) -> html.Div:
                         children=html.Button("Upload File", className="upload-button"),
                         multiple=False,
                     ),
+                    html.Div(
+                        id="error-message",
+                        style={
+                            "color": "red",
+                            "fontWeight": "bold",
+                            "fontSize": "22px",
+                            "fontStyle": "Helvetica Neue",
+                            "margin-top": "10px",
+                        },
+                    ),
                     # Container for displaying file info and buttons
                     html.Div(id="file-info"),
                     html.Div(
                         id="funds-buttons", style={"padding": "10px"}
                     ),  # This will hold the fund buttons
+                    html.Div(
+                        id="error-message2",
+                        style={
+                            "color": "red",
+                            "fontWeight": "bold",
+                            "fontSize": "22px",
+                            "fontStyle": "Helvetica Neue",
+                            "margin-top": "10px",
+                        },
+                    ),
                     # dcc.Markdown(id='value-display'),
                     html.Div(id="value-display", style={"margin": "20px 0"}),
                     # Container for displaying the table below the buttons

@@ -13,7 +13,7 @@ from layout import create_layout
 # File:    account.py
 # Date:    April 12, 2024
 # Author:  Jonathan A. Webb
-# Purpose: Describe the purpose of functions of this file
+# Purpose: This file contains all functions necessary to integrate the account.py app
 # ==========================================================================================
 # ==========================================================================================
 # Insert Code here

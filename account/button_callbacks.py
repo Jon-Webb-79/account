@@ -10,7 +10,7 @@ from dash.dependencies import ALL, Input, Output, State
 from dash.exceptions import PreventUpdate
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-from db import create_funds_df, create_position_df
+from db import create_funds_df, create_position_df, get_database_tables
 from plot import candlestick_plot, time_series_plot
 
 # ==========================================================================================
@@ -19,7 +19,9 @@ from plot import candlestick_plot, time_series_plot
 # File:    button_callbacks.py
 # Date:    April 13, 2024
 # Author:  Jonathan A. Webb
-# Purpose: Describe the purpose of functions of this file
+# Purpose: This file contains all functions necessary to create actions whena a button
+#          is depressed.  For brevity of integration the functions are integrated into
+#          a class
 # ==========================================================================================
 # ==========================================================================================
 # Insert Code here
@@ -53,7 +55,7 @@ class ButtonCallbackManager:
             raise PreventUpdate
 
         if not filename.endswith(".db"):
-            return no_update, "Please upload a file with a .db extension."
+            return no_update, "Error: Please upload a file with a .db extension."
 
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
@@ -70,7 +72,7 @@ class ButtonCallbackManager:
     def generate_fund_buttons(
         self,
         file_path: str,
-    ) -> tuple[Union[list[html.Button], html.Div], list[str]]:
+    ) -> tuple[Union[list[html.Button], html.Div], list[str], str]:
         """
         Generates HTML button elements for each unique fund found in the database
         file specified by the file path.
@@ -95,7 +97,26 @@ class ButtonCallbackManager:
             raise PreventUpdate
 
         try:
+            # Attempt to load fund names and database table names
             df = create_funds_df(file_path)
+            if df.empty:
+                return no_update, no_update, no_update
+
+            table_df = get_database_tables(file_path)
+
+            # Cross-reference fund names with database table names
+            valid_funds = [
+                fund
+                for fund in df["Fund"].unique()
+                if fund in table_df["Tables"].tolist()
+            ]
+
+            # If no valid funds are available, provide an appropriate error message
+            if not valid_funds:
+                error_msg = "Error: Fund names do not match existing tables!"
+                return no_update, no_update, error_msg
+
+            # Generate buttons only for valid funds
             fund_buttons = [
                 html.Button(
                     fund,
@@ -103,11 +124,13 @@ class ButtonCallbackManager:
                     className="dynamic-button-active" if index == 0 else "dynamic-button",
                     n_clicks=0,
                 )
-                for index, fund in enumerate(df["Fund"].unique())
+                for index, fund in enumerate(valid_funds)
             ]
-            return fund_buttons, df["Fund"].unique().tolist()
+            return fund_buttons, valid_funds, ""  # No error message when successful
+
         except Exception as e:
-            return html.Div([f"An error occurred processing the .db file: {e}"]), []
+            error_msg = f"Error: {str(e)}"
+            return [], [], error_msg
 
     # ------------------------------------------------------------------------------------------
 
@@ -468,7 +491,11 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
     )(manager.get_filename)
 
     app.callback(
-        [Output("funds-buttons", "children"), Output("fund-list", "data")],
+        [
+            Output("funds-buttons", "children"),
+            Output("fund-list", "data"),
+            Output("error-message2", "children"),
+        ],
         Input("db-path", "data"),
     )(manager.generate_fund_buttons)
 

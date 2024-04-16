@@ -102,6 +102,86 @@ class SQLiteDB:
 
     # ------------------------------------------------------------------------------------------
 
+    def get_table_columns(self, table_name: str, database: str = None) -> pd.DataFrame:
+        original_db = self.database
+        if database is None:
+            try:
+                # Execute the PRAGMA command to get the table information
+                self._cur.execute(f"PRAGMA table_info({table_name})")
+
+                # Fetch all rows from the cursor
+                rows = self._cur.fetchall()
+
+                if len(rows) == 0:
+                    raise sqlite3.Error(f"The table '{table_name}' does not exist.")
+
+                # The names of the columns in the result set
+                columns = ["id", "name", "type", "notnull", "default_value", "pk"]
+
+                # Convert the result set to a DataFrame
+                df = pd.DataFrame(rows, columns=columns)
+
+                # Modify the DataFrame to match the output from the MySQLDB method
+                df["Field"] = df["name"]
+                df["Type"] = df["type"]
+                df["Null"] = df["notnull"].map({0: "YES", 1: "NO"})
+                df["Key"] = df["pk"].map({0: "", 1: "PRI"})
+                df["Default"] = df["default_value"]
+                df["Extra"] = ""
+
+                # Only include the relevant columns in the DataFrame
+                df = df[["Field", "Type", "Null", "Key", "Default", "Extra"]]
+
+                return df
+
+            except sqlite3.Error as e:
+                # Handle any SQLite errors that occur
+                raise sqlite3.Error(f"An error occurred: {e}")
+        else:
+            self.close_connection()
+            self._database = database
+            self._create_connection()
+            try:
+                # Execute the PRAGMA command to get the table information
+                self._cur.execute(f"PRAGMA table_info({table_name})")
+
+                # Fetch all rows from the cursor
+                rows = self._cur.fetchall()
+
+                if len(rows) == 0:
+                    raise sqlite3.Error(f"The table '{table_name}' does not exist.")
+
+                # The names of the columns in the result set
+                columns = ["id", "name", "type", "notnull", "default_value", "pk"]
+
+                # Convert the result set to a DataFrame
+                df = pd.DataFrame(rows, columns=columns)
+
+                # Modify the DataFrame to match the output from the MySQLDB method
+                df["Field"] = df["name"]
+                df["Type"] = df["type"]
+                df["Null"] = df["notnull"].map({0: "YES", 1: "NO"})
+                df["Key"] = df["pk"].map({0: "", 1: "PRI"})
+                df["Default"] = df["default_value"]
+                df["Extra"] = ""
+
+                # Only include the relevant columns in the DataFrame
+                df = df[["Field", "Type", "Null", "Key", "Default", "Extra"]]
+                self._database = original_db
+                self.close_connection()
+                self._create_connection()
+
+                return df
+
+            except sqlite3.Error as e:
+                self._database = original_db
+                self.close_connection()
+                self._create_connection()
+                # Handle any SQLite errors that occur
+                raise sqlite3.Error(f"An error occurred: {e}")
+
+    # ------------------------------------------------------------------------------------------
+
     def execute_query(self, query: str, params: tuple = ()) -> pd.DataFrame:
         msg = "The number of placeholders in the query does not "
         msg += "match the number of parameters."
@@ -217,6 +297,14 @@ def create_funds_df(db_name: str) -> pd.DataFrame:
     query = "SELECT * FROM Funds;"
     with SQLiteDB(db_name) as db:
         return db.execute_query(query)
+
+
+# ------------------------------------------------------------------------------------------
+
+
+def get_database_tables(db_name: str) -> pd.DataFrame:
+    with SQLiteDB(db_name) as db:
+        return db.get_database_tables()
 
 
 # ==========================================================================================
