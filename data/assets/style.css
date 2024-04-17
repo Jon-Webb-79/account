@@ -13,6 +13,27 @@ html, body {
     box-sizing: border-box; /* Includes padding and border in the element's total size */
 }
 
+.input-text {
+    font-size: 16px;
+    padding: 8px 12px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    color: #333
+}
+
+.input-text:focus {
+    border-color: #0056b3;
+    box-shadow: 0 0 5px rgba(0, 86, 179, 0.5);
+    outline: none;
+}
+
+.input-text::placeholder {
+    color: #999;
+}
+
+
 .left-column, .right-column {
     display: flex; /* Makes the columns flex containers too, for vertical alignment if needed */
     flex-direction: column; /* Aligns column content vertically */

@@ -497,6 +497,7 @@ def register_button_callbacks(app: Dash, manager: ButtonCallbackManager):
             Output("error-message2", "children"),
         ],
         Input("db-path", "data"),
+        allow_duplicate=True,
     )(manager.generate_fund_buttons)
 
     app.callback(
