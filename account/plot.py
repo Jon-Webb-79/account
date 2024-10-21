@@ -34,6 +34,10 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
     dcc.Graph
         Plotly Graph object visualizing the value of close out price versus time.
     """
+    # Calculate the minimum and maximum Close values
+    min_close = df["Close"].min()
+    max_close = df["Close"].max()
+
     fig = px.line(
         df,
         x="Date",
@@ -45,12 +49,14 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
             "Close": ":.2f",  # Custom number format
         },
     )
+
     fig.update_traces(
         hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}",
         fill="tozeroy",
         fillcolor="rgba(173, 216, 230, 0.2)",
     )
 
+    # Update the layout, setting the y-axis range from the minimum to maximum close prices
     fig.update_layout(
         title={
             "text": "<b>Close Price Time History</b>",
@@ -70,63 +76,12 @@ def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
         yaxis=dict(
             title_font=dict(size=22, family="Courier New, monospace"),
             tickfont=dict(size=18, family="Courier New, monospace"),
+            range=[min_close, max_close],  # Set the y-axis range to start at min_close
         ),
         autosize=True,
         height=650,
     )
     return fig
-
-
-# def time_series_plot(df: pd.DataFrame, name: str) -> dcc.Graph:
-#     """
-#     Creates a time-series plot for closeout price over time in a DataFrame.
-#
-#     Parameters
-#     ----------
-#     :param df: Dataframe containing the data with 'Date' and 'Close' columns.
-#
-#     Returns
-#     -------
-#     :return: Plotly Graph object visualizing the value of close out price versus time.
-#
-#     """
-#     fig = px.line(
-#         df,
-#         x="Date",
-#         y="Close",
-#         title=f"{name} Close Price Time History",
-#         template="seaborn",
-#         hover_data={
-#             "Date": "|%B %d, %Y",  # Custom date format
-#             "Close": ":.2f",  # Custom number format
-#         },
-#     )
-#     fig.update_traces(hovertemplate="<b>Date:</b> %{x}<br><b>Close:</b> $%{y:.2f}")
-#
-#     fig.update_layout(
-#         title={
-#             "text": "<b>Close Price Time History</b>",
-#             "y": 0.9,
-#             "x": 0.5,
-#             "xanchor": "center",
-#             "yanchor": "top",
-#             "font": {"family": "Arial", "size": 24, "color": "black"},
-#         },
-#         xaxis_title="Date",
-#         yaxis_title="Close ($)",
-#         font=dict(family="Courier New, monospace", size=30, color="black"),
-#         xaxis=dict(
-#             title_font=dict(size=22, family="Courier New, monospace"),
-#             tickfont=dict(size=18, family="Courier New, monospace"),
-#         ),
-#         yaxis=dict(
-#             title_font=dict(size=22, family="Courier New, monospace"),
-#             tickfont=dict(size=18, family="Courier New, monospace"),
-#         ),
-#         autosize=True,
-#         height=650,
-#     )
-#     return fig
 
 
 # ------------------------------------------------------------------------------------------
@@ -152,6 +107,7 @@ def candlestick_plot(df: pd.DataFrame) -> dcc.Graph:
         # Return an empty graph if the DataFrame is empty
         return dcc.Graph()
     # Preparing data for the plot
+    df["Percentage"] = df["Percentage"] - df["Percentage"].iloc[0]
     df["Date"] = pd.to_datetime(df["Date"])  # Ensure date is datetime type
     # Assuming df is already prepared and sorted
     df["PrevPercentage"] = df["Percentage"].shift(1).fillna(df["Percentage"].iloc[0])

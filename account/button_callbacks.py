@@ -304,6 +304,7 @@ class ButtonCallbackManager:
         if not ctx.triggered:
             raise PreventUpdate
 
+        # Determine which button triggered the update
         triggered_info = json.loads(ctx.triggered[0]["prop_id"].split(".")[0])
         triggered_type = triggered_info["type"]
         button_name = triggered_info["index"]
@@ -314,7 +315,6 @@ class ButtonCallbackManager:
                 if i == "dynamic-button-active":
                     filter_time = duration_id[index]["index"]
                     break
-
         else:
             filter_time = button_name
             button_name = "none"
@@ -323,49 +323,49 @@ class ButtonCallbackManager:
                     button_name = fund_id[index]["index"]
                     break
             if button_name == "none":
-                button_name = fund_id[index][0]
+                button_name = fund_id[0]["index"]
 
+        # Get the filtered DataFrame for the selected fund and duration
         df = create_position_df(db_filename, button_name).round(2)
         if df.empty:
-            return None  # Optionally handle empty data case
+            return None
 
+        # Filter the DataFrame based on the selected time period
         filtered_df = self._filter_dataframe_by_duration(df, filter_time).copy()
+
+        # Get the start and end dates of the filtered period
         min_date = str(filtered_df["Date"].min())[0:10]
         max_date = str(filtered_df["Date"].max())[0:10]
 
-        # Placeholder values, replace these with actual calculations later
-        sum_contributions = filtered_df["Credit"].sum()
-        total_value = filtered_df["Close"].iloc[-1]
-        earned_percent = (
-            filtered_df["Percentage"].iloc[-1] - filtered_df["Percentage"].iloc[0]
+        # Calculate total contributions up until the start of the filtered period
+        filtered_df["Percentage"] = (
+            filtered_df["Percentage"] - filtered_df["Percentage"].iloc[0]
         )
+        start_value = filtered_df["Close"].iloc[0]
+        final_value = filtered_df["Close"].iloc[-1]
+        start_contrib = filtered_df["Credit"].iloc[0]
+        contributions = filtered_df["Credit"].sum()
+        if start_contrib > 0.0:
+            contributions -= start_contrib
+        earned_value = final_value - start_value - contributions
 
-        # Parse the date strings into datetime objects
+        # Final account value at the end of the filtered period
+        final_value = filtered_df["Close"].iloc[-1]
+
+        earned_percent = filtered_df["Percentage"].iloc[-1]
+        # Parse the date strings into datetime objects for duration calculation
         min_date_dt = parser.parse(min_date)
         max_date_dt = parser.parse(max_date)
-
-        # Calculate the difference
         difference = relativedelta(max_date_dt, min_date_dt)
+        years, months, days = difference.years, difference.months, difference.days
 
-        # Extract years, months, and days
-        years = difference.years
-        months = difference.months
-        days = difference.days
-
-        if sum_contributions != 0.0:
-            earned_value = total_value - sum_contributions
-        else:
-            earned_value = total_value - filtered_df["Close"].iloc[0]
-
+        # Create the UI display
         return html.Div(
             [
-                html.H3(
-                    f"{min_date} to {max_date}",
-                    style={"margin-top": "0", "fontSize": "22px"},
-                ),
+                html.H3(f"{min_date} to {max_date}", style={"fontSize": "22px"}),
                 html.H3(
                     f"Duration: {years} Years, {months} Months, {days} Days",
-                    style={"margin-bottom": "5px", "fontSize": "32px"},
+                    style={"fontSize": "32px"},
                 ),
                 html.Ul(
                     [
@@ -373,7 +373,7 @@ class ButtonCallbackManager:
                             [
                                 html.Span("Total Value: ", style={"fontWeight": "bold"}),
                                 html.Span(
-                                    f"${total_value:,.2f}", style={"fontWeight": "bold"}
+                                    f"${final_value:,.2f}", style={"fontWeight": "bold"}
                                 ),
                             ],
                             style={"fontSize": "20px"},
@@ -410,13 +410,7 @@ class ButtonCallbackManager:
                 "padding": "20px",
                 "border": "2px solid #ddd",
                 "border-radius": "10px",
-                "color": "#333",
                 "background-color": "#f9f9f9",
-                "font-family": "'Helvetica Neue', Arial, sans-serif",
-                "line-height": "1.6",
-                "fontSize": "16px",
-                "box-shadow": "0 2px 4px rgba(0,0,0,0.1)",
-                "margin": "10px 0",
             },
         )
 

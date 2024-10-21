@@ -6,7 +6,7 @@ authors = ["Jon Webb <webbja123@gmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 pandas = "^2.2.1"
 plotly = "^5.20.0"
 dash = "^2.16.1"
@@ -49,7 +49,7 @@ profile = 'black'
 
 [tool.black]
 line-length = 90
-target-version = ['py311']
+target-version = ['py312']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -73,7 +73,7 @@ exclude = '''
 [tool.tox]
 legacy_tox_ini = """
 	[tox]
-    env_list = py310, mypy, lint
+    env_list = py312, mypy, lint
 
     [testenv]
 	description = run tests with pytest
@@ -90,7 +90,7 @@ legacy_tox_ini = """
 
 	[gh-actions]
 	python =
-		3.11: py311, mypy, lint
+		3.12: py312, mypy, lint
 """
 
 [tool.mypy]
